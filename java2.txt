@@ -1,0 +1,86 @@
+-- 🚗 CAR RENTAL MANAGEMENT SYSTEM SQL SCRIPT
+
+-- 1️⃣ Create Database
+CREATE DATABASE CarRentalDB;
+USE CarRentalDB;
+
+-- 2️⃣ Create Tables
+CREATE TABLE Customers (
+    CustomerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Phone VARCHAR(15),
+    Email VARCHAR(100),
+    Address VARCHAR(255)
+);
+
+CREATE TABLE Cars (
+    CarID INT AUTO_INCREMENT PRIMARY KEY,
+    CarModel VARCHAR(100),
+    Brand VARCHAR(100),
+    RegNumber VARCHAR(20),
+    RentPerDay DECIMAL(10,2),
+    Status VARCHAR(20) DEFAULT 'Available'  -- Available / Booked / Maintenance
+);
+
+CREATE TABLE Rentals (
+    RentalID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT,
+    CarID INT,
+    RentDate DATE,
+    ReturnDate DATE,
+    TotalAmount DECIMAL(10,2),
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
+    FOREIGN KEY (CarID) REFERENCES Cars(CarID)
+);
+
+-- 3️⃣ Insert Sample Data
+INSERT INTO Customers (Name, Phone, Email, Address) VALUES
+('Arun Kumar', '9876543210', 'arun@gmail.com', 'Chennai'),
+('Priya Devi', '9789012345', 'priya@gmail.com', 'Madurai'),
+('Rahul Raj', '9090876543', 'rahul@gmail.com', 'Coimbatore');
+
+INSERT INTO Cars (CarModel, Brand, RegNumber, RentPerDay, Status) VALUES
+('Swift', 'Maruti', 'TN01AB1234', 1200.00, 'Available'),
+('i20', 'Hyundai', 'TN02BC5678', 1500.00, 'Available'),
+('Innova', 'Toyota', 'TN03CD9012', 2500.00, 'Booked'),
+('City', 'Honda', 'TN04EF3456', 2000.00, 'Available');
+
+INSERT INTO Rentals (CustomerID, CarID, RentDate, ReturnDate, TotalAmount) VALUES
+(1, 3, '2025-11-01', '2025-11-05', 10000.00);
+
+-- 4️⃣ Common Queries
+
+-- a) List all available cars
+SELECT * FROM Cars WHERE Status = 'Available';
+
+-- b) Show all booked cars with customer details
+SELECT c.Name, c.Phone, ca.CarModel, ca.Brand, r.RentDate, r.ReturnDate
+FROM Rentals r
+JOIN Customers c ON r.CustomerID = c.CustomerID
+JOIN Cars ca ON r.CarID = ca.CarID;
+
+-- c) Find total rental income
+SELECT SUM(TotalAmount) AS TotalIncome FROM Rentals;
+
+-- d) Show cars currently on rent
+SELECT CarModel, Brand, RegNumber
+FROM Cars
+WHERE Status = 'Booked';
+
+-- e) Update car status after return
+UPDATE Cars SET Status = 'Available' WHERE CarID = 3;
+
+-- f) Calculate total rent for a booking
+SELECT DATEDIFF(ReturnDate, RentDate) * RentPerDay AS TotalRent
+FROM Cars c
+JOIN Rentals r ON c.CarID = r.CarID
+WHERE r.RentalID = 1;
+
+-- g) Find most rented car
+SELECT c.CarModel, c.Brand, COUNT(r.CarID) AS TimesRented
+FROM Rentals r
+JOIN Cars c ON r.CarID = c.CarID
+GROUP BY r.CarID
+ORDER BY TimesRented DESC
+LIMIT 1;
+
